@@ -1,20 +1,29 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🔖 私人书签</title>
 <style>
+/* 深色主题变量 */
 :root {
   --bg: #0f1117; --card: #1a1d27; --border: #2a2d3a;
   --text: #e4e6ed; --muted: #8b8fa3; --accent: #7c3aed;
   --accent-light: #a78bfa; --green: #10b981; --red: #ef4444;
-  --radius: 12px;
+  --radius: 12px; --overlay: rgba(0,0,0,.6);
+}
+/* 白色主题变量 */
+[data-theme="light"] {
+  --bg: #f5f6f9; --card: #ffffff; --border: #e4e6ef;
+  --text: #1a1d2e; --muted: #6b7080; --accent: #6d28d9;
+  --accent-light: #7c3aed; --green: #059669; --red: #dc2626;
+  --radius: 12px; --overlay: rgba(0,0,0,.3);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
   background: var(--bg); color: var(--text); min-height: 100vh;
+  transition: background .25s, color .25s;
 }
 /* 登录页 */
 .login-wrap { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
@@ -30,8 +39,7 @@ body {
 }
 .login-box button {
   width: 100%; padding: 12px; border-radius: 10px; border: 0; cursor: pointer;
-  background: var(--accent); color: #fff; font-size: 15px; font-weight: 600;
-  transition: .2s;
+  background: var(--accent); color: #fff; font-size: 15px; font-weight: 600; transition: .2s;
 }
 .login-box button:hover { background: var(--accent-light); }
 
@@ -45,7 +53,7 @@ header h1 { font-size: 22px; white-space: nowrap; }
   border: 1px solid var(--border); background: var(--card); color: var(--text); font-size: 14px;
 }
 .search-box svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); }
-.header-actions { display: flex; gap: 8px; }
+.header-actions { display: flex; gap: 8px; align-items: center; }
 .btn {
   padding: 10px 16px; border-radius: 10px; border: 1px solid var(--border);
   background: var(--card); color: var(--text); cursor: pointer; font-size: 13px;
@@ -55,25 +63,24 @@ header h1 { font-size: 22px; white-space: nowrap; }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
 .btn.primary:hover { background: var(--accent-light); }
 .btn.danger:hover { border-color: var(--red); color: var(--red); }
-.btn.small { padding: 6px 12px; font-size: 12px; }
+.btn.icon { padding: 10px 12px; font-size: 16px; line-height: 1; }
 
 /* 侧栏 + 内容 */
-.layout { display: grid; grid-template-columns: 200px 1fr; gap: 20px; }
-.sidebar { display: flex; flex-direction: column; gap: 12px; }
+.layout { display: grid; grid-template-columns: 220px 1fr; gap: 20px; }
+.sidebar { display: flex; flex-direction: column; gap: 16px; }
 .sidebar-section h3 { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
-.cat-item, .tag-item {
+.cat-item {
   display: flex; justify-content: space-between; align-items: center;
   padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px;
-  transition: .15s; color: var(--muted);
+  transition: .12s; color: var(--muted);
 }
-.cat-item:hover, .tag-item:hover { background: var(--card); color: var(--text); }
-.cat-item.active, .tag-item.active { background: var(--accent); color: #fff; }
-.cat-item .count, .tag-item .count { font-size: 12px; opacity: .7; }
+.cat-item:hover { background: var(--card); color: var(--text); }
+.cat-item.active { background: var(--accent); color: #fff; }
+.cat-item .count { font-size: 12px; opacity: .7; }
 .tag-cloud { display: flex; flex-wrap: wrap; gap: 6px; }
 .tag-chip {
   padding: 4px 10px; border-radius: 999px; font-size: 12px; cursor: pointer;
-  background: var(--card); border: 1px solid var(--border); color: var(--muted);
-  transition: .15s;
+  background: var(--card); border: 1px solid var(--border); color: var(--muted); transition: .12s;
 }
 .tag-chip:hover { border-color: var(--accent); color: var(--accent-light); }
 .tag-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
@@ -82,7 +89,7 @@ header h1 { font-size: 22px; white-space: nowrap; }
 .bookmarks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
 .bookmark-card {
   background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 16px; display: flex; gap: 14px; transition: .2s; position: relative;
+  padding: 16px; display: flex; gap: 14px; transition: opacity .2s, transform .2s, border-color .2s; position: relative;
 }
 .bookmark-card:hover { border-color: var(--accent); transform: translateY(-2px); }
 .bookmark-icon { width: 40px; height: 40px; border-radius: 8px; flex-shrink: 0; object-fit: contain; background: var(--bg); }
@@ -102,7 +109,7 @@ header h1 { font-size: 22px; white-space: nowrap; }
 
 /* 弹窗 */
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 100;
+  position: fixed; inset: 0; background: var(--overlay); z-index: 100;
   display: flex; justify-content: center; align-items: center; padding: 20px;
 }
 .modal {
@@ -121,6 +128,9 @@ header h1 { font-size: 22px; white-space: nowrap; }
 .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
 @media (max-width: 768px) { .layout { grid-template-columns: 1fr; } .sidebar { order: 2; } }
 </style>
+<script>
+(function(){try{var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
 </head>
 <body>
 
@@ -144,9 +154,10 @@ header h1 { font-size: 22px; white-space: nowrap; }
     </div>
     <div class="header-actions">
       <button class="btn primary" onclick="openAddModal()">+ 添加</button>
-      <button class="btn" onclick="exportData()">导出</button>
+      <button class="btn" onclick="exportHTML()" title="导出为浏览器书签HTML">导出</button>
       <button class="btn" onclick="document.getElementById('importFile').click()">导入</button>
       <input type="file" id="importFile" accept=".json,.html,.htm" style="display:none" onchange="importData(event)">
+      <button class="btn icon" id="themeToggle" onclick="toggleTheme()" title="切换主题">🌙</button>
       <button class="btn danger" onclick="logout()">退出</button>
     </div>
   </header>
@@ -209,6 +220,23 @@ let currentCategory = "全部";
 let currentTag = "";
 let searchQuery = "";
 let searchTimer = null;
+let allBookmarks = []; // 本地缓存，减少请求
+
+// ── 主题 ──
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute("data-theme") || "light";
+  const next = cur === "light" ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("theme", next);
+  document.getElementById("themeToggle").textContent = next === "light" ? "🌙" : "☀️";
+}
+(function(){ // 初始化按钮图标
+  const t = document.documentElement.getAttribute("data-theme") || "light";
+  document.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById("themeToggle");
+    if (btn) btn.textContent = t === "light" ? "🌙" : "☀️";
+  });
+})();
 
 // ── 认证 ──
 async function doLogin() {
@@ -249,35 +277,66 @@ async function api(method, path, body) {
 async function showApp() {
   document.getElementById("loginPage").style.display = "none";
   document.getElementById("mainApp").style.display = "block";
-  await loadCategories();
-  await loadTags();
-  await loadBookmarks();
+  await loadAll();
 }
 
-async function loadBookmarks() {
-  let path = "/bookmarks";
-  const params = new URLSearchParams();
-  if (searchQuery) params.set("q", searchQuery);
-  if (currentCategory && currentCategory !== "全部") params.set("category", currentCategory);
-  if (currentTag) params.set("tag", currentTag);
-  if (params.toString()) path += "?" + params;
+// 一次性加载全部书签，本地做分类/标签/搜索
+async function loadAll() {
+  const result = await api("GET", "/bookmarks");
+  allBookmarks = result.data || [];
+  renderCategories();
+  renderTags();
+  renderBookmarks();
+}
 
-  const result = await api("GET", path);
+// 从本地缓存渲染分类
+function renderCategories() {
+  const el = document.getElementById("catList");
+  const catMap = {};
+  allBookmarks.forEach(b => { catMap[b.category || "未分类"] = (catMap[b.category || "未分类"] || 0) + 1; });
+  const cats = [{ category: "全部", count: allBookmarks.length }, ...Object.entries(catMap).map(([category, count]) => ({ category, count })).sort((a,b) => b.count - a.count)];
+  el.innerHTML = cats.map(c =>
+    `<div class="cat-item ${currentCategory === c.category ? "active" : ""}" onclick="selectCategory('${esc(c.category)}')">
+      <span>${esc(c.category)}</span><span class="count">${c.count}</span>
+    </div>`
+  ).join("");
+  document.getElementById("catDatalist").innerHTML =
+    cats.filter(c => c.category !== "全部").map(c => `<option value="${esc(c.category)}">`).join("");
+}
+
+// 从本地缓存渲染标签
+function renderTags() {
+  const el = document.getElementById("tagList");
+  const tagMap = {};
+  allBookmarks.forEach(b => { (b.tags || "").split(",").forEach(t => { t = t.trim(); if (t) tagMap[t] = (tagMap[t]||0)+1; }); });
+  const tags = Object.entries(tagMap).map(([name, count]) => ({ name, count })).sort((a,b) => b.count - a.count);
+  if (!tags.length) { el.innerHTML = '<span style="color:var(--muted);font-size:13px">暂无标签</span>'; return; }
+  el.innerHTML = tags.map(t =>
+    `<span class="tag-chip ${currentTag === t.name ? "active" : ""}" onclick="selectTag('${esc(t.name)}')">${esc(t.name)} (${t.count})</span>`
+  ).join("");
+}
+
+// 从本地缓存渲染书签（零网络请求）
+function renderBookmarks() {
+  let list = allBookmarks;
+  if (currentCategory && currentCategory !== "全部") list = list.filter(b => (b.category || "未分类") === currentCategory);
+  if (currentTag) list = list.filter(b => (b.tags || "").split(",").map(t => t.trim()).includes(currentTag));
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    list = list.filter(b => (b.title + b.url + (b.description||"") + (b.tags||"") + (b.category||"")).toLowerCase().includes(q));
+  }
+  list = [...list].sort((a,b) => (b.created_at||"").localeCompare(a.created_at||""));
+
   const grid = document.getElementById("bookmarkGrid");
   const empty = document.getElementById("emptyState");
-
-  if (!result.success || !result.data || !result.data.length) {
-    grid.innerHTML = "";
-    empty.style.display = "block";
-    return;
-  }
-
+  if (!list.length) { grid.innerHTML = ""; empty.style.display = "block"; return; }
   empty.style.display = "none";
-  grid.innerHTML = result.data.map(b => {
+
+  grid.innerHTML = list.map(b => {
     const tags = (b.tags || "").split(",").filter(Boolean).map(t => `<span class="bookmark-tag">${t.trim()}</span>`).join("");
     const favicon = b.favicon || `https://www.google.com/s2/favicons?domain=${getDomain(b.url)}&sz=64`;
     return `
-      <div class="bookmark-card">
+      <div class="bookmark-card" data-id="${b.id}">
         <img class="bookmark-icon" src="${favicon}" onerror="this.style.display='none'">
         <div class="bookmark-info">
           <div class="bookmark-title"><a href="${b.url}" target="_blank" rel="noreferrer">${esc(b.title)}</a></div>
@@ -295,63 +354,31 @@ async function loadBookmarks() {
   }).join("");
 }
 
-async function loadCategories() {
-  const result = await api("GET", "/categories");
-  const el = document.getElementById("catList");
-
-  // 获取总数
-  const all = await api("GET", "/bookmarks");
-  const total = all.data ? all.data.length : 0;
-  const cats = [{ category: "全部", count: total }, ...(result.data || [])];
-
-  el.innerHTML = cats.map(c =>
-    `<div class="cat-item ${currentCategory === c.category ? "active" : ""}" onclick="selectCategory('${esc(c.category)}')">
-      <span>${esc(c.category)}</span><span class="count">${c.count}</span>
-    </div>`
-  ).join("");
-
-  document.getElementById("catDatalist").innerHTML =
-    cats.filter(c => c.category !== "全部").map(c => `<option value="${esc(c.category)}">`).join("");
-}
-
-async function loadTags() {
-  const result = await api("GET", "/tags");
-  const el = document.getElementById("tagList");
-  const tags = result.data || [];
-  if (!tags.length) { el.innerHTML = '<span style="color:var(--muted);font-size:13px">暂无标签</span>'; return; }
-  el.innerHTML = tags.map(t =>
-    `<span class="tag-chip ${currentTag === t.name ? "active" : ""}" onclick="selectTag('${esc(t.name)}')">${esc(t.name)} (${t.count})</span>`
-  ).join("");
-}
-
-// ── 筛选（乐观更新，不重新加载侧栏）──
+// ── 筛选（纯本地，零网络）──
 function selectCategory(cat) {
   currentCategory = cat;
   currentTag = "";
-  // 仅更新高亮，不重新加载侧栏
   document.querySelectorAll(".cat-item").forEach(el => {
-    const text = el.querySelector("span").textContent;
-    el.classList.toggle("active", text === cat);
+    el.classList.toggle("active", el.querySelector("span").textContent === cat);
   });
   document.querySelectorAll(".tag-chip").forEach(el => el.classList.remove("active"));
-  loadBookmarks();
+  renderBookmarks();
 }
 
 function selectTag(tag) {
   currentTag = currentTag === tag ? "" : tag;
-  // 仅更新高亮
   document.querySelectorAll(".tag-chip").forEach(el => {
     el.classList.toggle("active", el.textContent.startsWith(tag) && currentTag === tag);
   });
-  loadBookmarks();
+  renderBookmarks();
 }
 
 function debouncedSearch() {
   clearTimeout(searchTimer);
   searchTimer = setTimeout(() => {
     searchQuery = document.getElementById("searchInput").value.trim();
-    loadBookmarks();
-  }, 300);
+    renderBookmarks();
+  }, 200);
 }
 
 // ── CRUD ──
@@ -366,9 +393,8 @@ function openAddModal() {
   document.getElementById("addModal").style.display = "flex";
 }
 
-async function openEditModal(id) {
-  const result = await api("GET", "/bookmarks");
-  const b = (result.data || []).find(x => x.id === id);
+function openEditModal(id) {
+  const b = allBookmarks.find(x => x.id === id);
   if (!b) return;
   document.getElementById("modalTitle").textContent = "编辑书签";
   document.getElementById("editId").value = id;
@@ -380,9 +406,7 @@ async function openEditModal(id) {
   document.getElementById("addModal").style.display = "flex";
 }
 
-function closeModal() {
-  document.getElementById("addModal").style.display = "none";
-}
+function closeModal() { document.getElementById("addModal").style.display = "none"; }
 
 async function saveBookmark() {
   const id = document.getElementById("editId").value;
@@ -393,82 +417,94 @@ async function saveBookmark() {
     category: document.getElementById("catInput").value.trim() || "未分类",
     tags: document.getElementById("tagsInput").value.trim(),
   };
-
   if (!data.url || !data.title) { alert("URL 和标题必填"); return; }
-
+  closeModal();
+  // 乐观更新
   if (id) {
     await api("PUT", "/bookmarks/" + id, data);
+    const idx = allBookmarks.findIndex(b => b.id === parseInt(id));
+    if (idx >= 0) allBookmarks[idx] = { ...allBookmarks[idx], ...data };
   } else {
-    await api("POST", "/bookmarks", data);
+    const result = await api("POST", "/bookmarks", data);
+    if (result.success && result.data) {
+      allBookmarks.unshift({ id: result.data.id, ...data, favicon: `https://www.google.com/s2/favicons?domain=${getDomain(data.url)}&sz=64`, created_at: new Date().toISOString() });
+    }
   }
-
-  closeModal();
-  await loadCategories();
-  await loadTags();
-  await loadBookmarks();
+  renderCategories();
+  renderTags();
+  renderBookmarks();
 }
 
-async function delBookmark(id) {
+function delBookmark(id) {
   if (!confirm("确定删除？")) return;
-  // 乐观删除：立即从页面移除，后台同步
-  const grid = document.getElementById("bookmarkGrid");
-  const cards = grid.querySelectorAll(".bookmark-card");
-  const card = [...cards].find(c => c.querySelector(`button[onclick="delBookmark(${id})"]`));
-  if (card) {
-    card.style.transition = "opacity .2s, transform .2s";
-    card.style.opacity = "0";
-    card.style.transform = "translateX(20px)";
-    setTimeout(() => card.remove(), 200);
-  }
-  // 减少空状态闪烁
-  const result = await api("DELETE", "/bookmarks/" + id);
-  if (!result.success) {
-    alert("删除失败：" + (result.error || "未知错误"));
-    await loadBookmarks(); // 失败则重新加载
-    return;
-  }
-  // 后台静默刷新分类和标签计数
-  loadCategories();
-  loadTags();
+  // 纯前端移除，零延迟
+  allBookmarks = allBookmarks.filter(b => b.id !== id);
+  renderCategories();
+  renderTags();
+  renderBookmarks();
+  // 后台静默请求，不阻塞 UI
+  api("DELETE", "/bookmarks/" + id).then(result => {
+    if (!result.success) { alert("删除失败，正在刷新"); loadAll(); }
+  });
 }
 
-// ── 导入导出 ──
-async function exportData() {
-  const result = await api("GET", "/export");
-  const blob = new Blob([JSON.stringify(result.data || [], null, 2)], { type: "application/json" });
+// ── 导出为 Chrome/Edge 兼容的 Netscape HTML ──
+function exportHTML() {
+  // 按分类分组
+  const catMap = {};
+  allBookmarks.forEach(b => {
+    const cat = b.category || "未分类";
+    if (!catMap[cat]) catMap[cat] = [];
+    catMap[cat].push(b);
+  });
+
+  const ts = Math.floor(Date.now() / 1000);
+  let html = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<TITLE>Bookmarks</TITLE>
+<H1>Bookmarks</H1>
+<DL><p>
+`;
+
+  for (const [cat, items] of Object.entries(catMap)) {
+    html += `    <DT><H3 ADD_DATE="${ts}" LAST_MODIFIED="${ts}">${esc(cat)}</H3>\n    <DL><p>\n`;
+    for (const b of items) {
+      const addDate = b.created_at ? Math.floor(new Date(b.created_at + "Z").getTime() / 1000) || ts : ts;
+      const icon = b.favicon ? ` ICON="${esc(b.favicon)}"` : "";
+      html += `        <DT><A HREF="${esc(b.url)}" ADD_DATE="${addDate}"${icon}>${esc(b.title)}</A>\n`;
+    }
+    html += `    </DL><p>\n`;
+  }
+
+  html += `</DL><p>\n`;
+
+  const blob = new Blob([html], { type: "text/html" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "bookmarks-" + new Date().toISOString().slice(0,10) + ".json";
+  a.download = "bookmarks-" + new Date().toISOString().slice(0,10) + ".html";
   a.click();
 }
 
+// ── 导入 ──
 async function importData(event) {
   const file = event.target.files[0];
   if (!file) return;
   const text = await file.text();
   const isHTML = file.name.endsWith(".html") || file.name.endsWith(".htm");
-
   try {
     let result;
     if (isHTML) {
-      // Chrome/Edge HTML 书签文件
       result = await fetch("/api/import", {
         method: "POST",
-        headers: {
-          "Authorization": "Bearer " + token,
-          "Content-Type": "text/html",
-        },
+        headers: { "Authorization": "Bearer " + token, "Content-Type": "text/html" },
         body: text,
       }).then(r => r.json());
     } else {
-      // JSON 格式
       const data = JSON.parse(text);
       result = await api("POST", "/import", data);
     }
     alert("导入成功：" + (result.imported || 0) + " 条" + (result.format === "html" ? "（来自浏览器书签）" : ""));
-    await loadCategories();
-    await loadTags();
-    await loadBookmarks();
+    await loadAll();
   } catch (e) {
     alert("导入失败：" + e.message);
   }
