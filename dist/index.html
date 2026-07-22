@@ -298,11 +298,11 @@ async function loadBookmarks() {
 async function loadCategories() {
   const result = await api("GET", "/categories");
   const el = document.getElementById("catList");
-  const cats = [{ category: "全部", count: 0 }, ...(result.data || [])];
 
   // 获取总数
   const all = await api("GET", "/bookmarks");
-  cats[0].count = all.data ? all.data.length : 0;
+  const total = all.data ? all.data.length : 0;
+  const cats = [{ category: "全部", count: total }, ...(result.data || [])];
 
   el.innerHTML = cats.map(c =>
     `<div class="cat-item ${currentCategory === c.category ? "active" : ""}" onclick="selectCategory('${esc(c.category)}')">
@@ -310,7 +310,6 @@ async function loadCategories() {
     </div>`
   ).join("");
 
-  // 更新 datalist
   document.getElementById("catDatalist").innerHTML =
     cats.filter(c => c.category !== "全部").map(c => `<option value="${esc(c.category)}">`).join("");
 }
@@ -325,18 +324,25 @@ async function loadTags() {
   ).join("");
 }
 
-// ── 筛选 ──
+// ── 筛选（乐观更新，不重新加载侧栏）──
 function selectCategory(cat) {
   currentCategory = cat;
   currentTag = "";
-  loadCategories();
-  loadTags();
+  // 仅更新高亮，不重新加载侧栏
+  document.querySelectorAll(".cat-item").forEach(el => {
+    const text = el.querySelector("span").textContent;
+    el.classList.toggle("active", text === cat);
+  });
+  document.querySelectorAll(".tag-chip").forEach(el => el.classList.remove("active"));
   loadBookmarks();
 }
 
 function selectTag(tag) {
   currentTag = currentTag === tag ? "" : tag;
-  loadTags();
+  // 仅更新高亮
+  document.querySelectorAll(".tag-chip").forEach(el => {
+    el.classList.toggle("active", el.textContent.startsWith(tag) && currentTag === tag);
+  });
   loadBookmarks();
 }
 
