@@ -146,15 +146,28 @@ async function handleTags(request, env) {
 }
 
 async function handleImport(request, env) {
-  const body = await request.json();
-  if (!Array.isArray(body)) {
-    return json({ success: false, error: "需要书签数组" }, 400);
+  const contentType = request.headers.get("content-type") || "";
+  let items = [];
+  let importFormat = "json";
+
+  // 支持 HTML 书签文件（Chrome/Edge 导出格式）和 JSON
+  if (contentType.includes("text/html") || contentType.includes("text/plain")) {
+    const html = await request.text();
+    items = parseBookmarkHTML(html);
+    importFormat = "html";
+  } else {
+    const body = await request.json();
+    if (Array.isArray(body)) {
+      items = body;
+    } else {
+      return json({ success: false, error: "需要书签数组 JSON 或 HTML 书签文件" }, 400);
+    }
   }
 
   let imported = 0;
-  for (const item of body) {
+  for (const item of items) {
     if (!item.url || !item.title) continue;
-    const favicon = getFavicon(item.url);
+    const favicon = item.favicon || getFavicon(item.url);
     const tags = Array.isArray(item.tags) ? item.tags.join(",") : (item.tags || "");
     await env.DB.prepare(
       "INSERT INTO bookmarks (url, title, description, category, tags, favicon) VALUES (?, ?, ?, ?, ?, ?)"
@@ -169,7 +182,55 @@ async function handleImport(request, env) {
     imported++;
   }
 
-  return json({ success: true, imported });
+  return json({ success: true, imported, format: importFormat });
+}
+
+// 解析 Chrome/Edge 导出的 Netscape 书签 HTML
+function parseBookmarkHTML(html) {
+  const items = [];
+  // 匹配 <DT><A HREF="..." ADD_DATE="..." ICON="...">标题</A>
+  // 以及上层的 <H3>分类名</H3>
+  let currentCategory = "未分类";
+
+  // 按行解析，跟踪 H3 分类
+  const lines = html.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // 匹配 <H3> 分类标题
+    const h3Match = line.match(/<H3[^>]*>(.+?)<\/H3>/i);
+    if (h3Match) {
+      currentCategory = h3Match[1].trim();
+      continue;
+    }
+
+    // 匹配 <A> 书签链接
+    const aMatch = line.match(/<A[^>]*HREF="([^"]+)"[^>]*>(.+?)<\/A>/i);
+    if (aMatch) {
+      const url = aMatch[1];
+      const title = aMatch[2].replace(/<[^>]+>/g, "").trim();
+
+      // 尝试提取 ICON
+      const iconMatch = line.match(/ICON="([^"]+)"/i);
+      const favicon = iconMatch ? iconMatch[1] : "";
+
+      // 尝试提取 ADD_DATE
+      let description = "";
+      const addDateMatch = line.match(/ADD_DATE="(\d+)"/i);
+      if (addDateMatch) {
+        const ts = parseInt(addDateMatch[1]);
+        if (ts > 0) {
+          description = "添加时间: " + new Date(ts * 1000).toISOString().slice(0, 10);
+        }
+      }
+
+      if (url && url !== "undefined" && title) {
+        items.push({ url, title, description, category: currentCategory, favicon });
+      }
+    }
+  }
+
+  return items;
 }
 
 async function handleExport(request, env) {

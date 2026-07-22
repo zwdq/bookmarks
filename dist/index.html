@@ -146,7 +146,7 @@ header h1 { font-size: 22px; white-space: nowrap; }
       <button class="btn primary" onclick="openAddModal()">+ 添加</button>
       <button class="btn" onclick="exportData()">导出</button>
       <button class="btn" onclick="document.getElementById('importFile').click()">导入</button>
-      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+      <input type="file" id="importFile" accept=".json,.html,.htm" style="display:none" onchange="importData(event)">
       <button class="btn danger" onclick="logout()">退出</button>
     </div>
   </header>
@@ -424,10 +424,26 @@ async function importData(event) {
   const file = event.target.files[0];
   if (!file) return;
   const text = await file.text();
+  const isHTML = file.name.endsWith(".html") || file.name.endsWith(".htm");
+
   try {
-    const data = JSON.parse(text);
-    const result = await api("POST", "/import", data);
-    alert("导入成功：" + (result.imported || 0) + " 条");
+    let result;
+    if (isHTML) {
+      // Chrome/Edge HTML 书签文件
+      result = await fetch("/api/import", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + token,
+          "Content-Type": "text/html",
+        },
+        body: text,
+      }).then(r => r.json());
+    } else {
+      // JSON 格式
+      const data = JSON.parse(text);
+      result = await api("POST", "/import", data);
+    }
+    alert("导入成功：" + (result.imported || 0) + " 条" + (result.format === "html" ? "（来自浏览器书签）" : ""));
     await loadCategories();
     await loadTags();
     await loadBookmarks();
