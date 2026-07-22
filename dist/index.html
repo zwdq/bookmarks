@@ -130,7 +130,7 @@ header h1 { font-size: 22px; white-space: nowrap; }
   <div class="layout">
     <div class="sidebar">
       <div class="sidebar-section">
-        <h3>目录 <button class="add-btn" onclick="openFolderModal(null)" title="新建文件夹">＋</button></h3>
+        <h3>目录 <span style="display:flex;gap:4px;"><button class="add-btn" onclick="openFolderModal(null)" title="新建文件夹">＋</button><button class="add-btn" onclick="clearFolderBookmarks()" title="清空当前目录的书签" style="color:var(--red);">🗑</button></span></h3>
         <div id="folderTree"></div>
       </div>
       <div class="sidebar-section">
@@ -379,6 +379,25 @@ async function delFolder(id) {
   renderTags();
   renderBookmarks();
   await api("DELETE", "/folders/" + id);
+}
+
+// ── 批量清空 ──
+async function clearFolderBookmarks() {
+  const folderName = currentFolderId === null ? "根目录（全部书签）" : (allFolders.find(f => f.id === currentFolderId)?.name || "当前目录");
+  const ids = getFolderBookmarks(currentFolderId).map(b => b.id);
+  if (!ids.length) { alert("当前目录没有书签"); return; }
+  if (!confirm(`确定清空「${folderName}」下的所有书签？共 ${ids.length} 条，此操作不可撤销！`)) return;
+
+  // 乐观删除
+  allBookmarks = allBookmarks.filter(b => !ids.includes(b.id));
+  renderTree();
+  renderTags();
+  renderBookmarks();
+
+  // 后台批量删除
+  for (const id of ids) {
+    api("DELETE", "/bookmarks/" + id);
+  }
 }
 
 // ── 书签渲染 ──
