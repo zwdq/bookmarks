@@ -383,21 +383,41 @@ async function delFolder(id) {
 
 // ── 批量清空 ──
 async function clearFolderBookmarks() {
-  const folderName = currentFolderId === null ? "根目录（全部书签）" : (allFolders.find(f => f.id === currentFolderId)?.name || "当前目录");
-  const ids = getFolderBookmarks(currentFolderId).map(b => b.id);
-  if (!ids.length) { alert("当前目录没有书签"); return; }
-  if (!confirm(`确定清空「${folderName}」下的所有书签？共 ${ids.length} 条，此操作不可撤销！`)) return;
+  const folderName = currentFolderId === null ? "根目录（全部）" : (allFolders.find(f => f.id === currentFolderId)?.name || "当前目录");
+  const bmIds = getFolderBookmarks(currentFolderId).map(b => b.id);
+  let folderIds = [];
+  if (currentFolderId !== null) {
+    // 递归收集当前文件夹及所有子文件夹
+    function collectFolders(pid) {
+      folderIds.push(pid);
+      for (const f of allFolders.filter(f => f.parent_id === pid)) {
+        collectFolders(f.id);
+      }
+    }
+    collectFolders(currentFolderId);
+  }
+  const totalBm = bmIds.length;
+  const totalFd = folderIds.length;
+  if (!totalBm && !totalFd) { alert("当前目录没有书签或子目录"); return; }
+  let msg = `确定清空「${folderName}」？\n`;
+  if (totalBm) msg += `删除 ${totalBm} 个书签\n`;
+  if (totalFd) msg += `删除 ${totalFd} 个文件夹（含子文件夹）\n`;
+  msg += `此操作不可撤销！`;
+  if (!confirm(msg)) return;
 
-  // 乐观删除
-  allBookmarks = allBookmarks.filter(b => !ids.includes(b.id));
+  // 乐观删除：书签 + 文件夹
+  allBookmarks = allBookmarks.filter(b => !bmIds.includes(b.id));
+  if (folderIds.length) {
+    allFolders = allFolders.filter(f => !folderIds.includes(f.id));
+  }
+  currentFolderId = null;
   renderTree();
   renderTags();
   renderBookmarks();
 
   // 后台批量删除
-  for (const id of ids) {
-    api("DELETE", "/bookmarks/" + id);
-  }
+  for (const id of bmIds) api("DELETE", "/bookmarks/" + id);
+  for (const id of folderIds) api("DELETE", "/folders/" + id);
 }
 
 // ── 书签渲染 ──
