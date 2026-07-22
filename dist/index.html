@@ -66,8 +66,9 @@ header h1 { font-size: 22px; white-space: nowrap; }
 .btn.icon { padding: 10px 12px; font-size: 16px; line-height: 1; }
 
 /* 侧栏 + 内容 */
-.layout { display: grid; grid-template-columns: 220px 1fr; gap: 20px; max-height: calc(100vh - 100px); }
-.sidebar { display: flex; flex-direction: column; gap: 16px; overflow-y: auto; position: sticky; top: 0; max-height: calc(100vh - 100px); padding-right: 4px; }
+.layout { display: grid; grid-template-columns: 220px 1fr; gap: 20px; height: calc(100vh - 100px); }
+.sidebar { display: flex; flex-direction: column; gap: 16px; overflow-y: auto; padding-right: 4px; }
+.bookmark-scroll { overflow-y: auto; padding-right: 4px; }
 .sidebar-section h3 { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
 .cat-item {
   display: flex; justify-content: space-between; align-items: center;
@@ -126,7 +127,7 @@ header h1 { font-size: 22px; white-space: nowrap; }
 .modal .field textarea { resize: vertical; min-height: 60px; }
 .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
 .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
-@media (max-width: 768px) { .layout { grid-template-columns: 1fr; max-height: none; } .sidebar { order: 2; position: static; max-height: none; overflow: visible; } }
+@media (max-width: 768px) { .layout { grid-template-columns: 1fr; height: auto; } .sidebar { order: 2; overflow: visible; } .bookmark-scroll { overflow: visible; } }
 </style>
 <script>
 (function(){try{var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
@@ -174,7 +175,7 @@ header h1 { font-size: 22px; white-space: nowrap; }
       </div>
     </div>
 
-    <div>
+    <div class="bookmark-scroll">
       <div class="bookmarks-grid" id="bookmarkGrid"></div>
       <div class="empty" id="emptyState" style="display:none">还没有书签，点击「+ 添加」创建第一个吧</div>
     </div>
