@@ -404,10 +404,26 @@ async function saveBookmark() {
 
 async function delBookmark(id) {
   if (!confirm("确定删除？")) return;
-  await api("DELETE", "/bookmarks/" + id);
-  await loadCategories();
-  await loadTags();
-  await loadBookmarks();
+  // 乐观删除：立即从页面移除，后台同步
+  const grid = document.getElementById("bookmarkGrid");
+  const cards = grid.querySelectorAll(".bookmark-card");
+  const card = [...cards].find(c => c.querySelector(`button[onclick="delBookmark(${id})"]`));
+  if (card) {
+    card.style.transition = "opacity .2s, transform .2s";
+    card.style.opacity = "0";
+    card.style.transform = "translateX(20px)";
+    setTimeout(() => card.remove(), 200);
+  }
+  // 减少空状态闪烁
+  const result = await api("DELETE", "/bookmarks/" + id);
+  if (!result.success) {
+    alert("删除失败：" + (result.error || "未知错误"));
+    await loadBookmarks(); // 失败则重新加载
+    return;
+  }
+  // 后台静默刷新分类和标签计数
+  loadCategories();
+  loadTags();
 }
 
 // ── 导入导出 ──
