@@ -19,7 +19,7 @@ function json(data, status = 200) {
 function checkAuth(request, env) {
   const auth = request.headers.get("Authorization") || "";
   const token = auth.replace("Bearer ", "");
-  return token === ACCESS_PASSWORD(env);
+  return token === (env.ACCESS_PASSWORD || "shaduanduan123");
 }
 
 function getDomain(url) {

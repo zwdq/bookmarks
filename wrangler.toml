@@ -9,4 +9,4 @@ database_id = "a89f7b6e-93af-4c6a-9a0b-5a111dc18f27"
 
 [vars]
 # 访问密码，部署后可通过 CF Dashboard 修改
-ACCESS_PASSWORD = "zwdq2026"
+ACCESS_PASSWORD = "shaduanduan123"
