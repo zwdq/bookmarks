@@ -178,6 +178,13 @@ header h1 { font-size: 22px; white-space: nowrap; }
 </div>
 
 <script>
+// SSO: 接收来自 Dashboard 的自动登录
+window.addEventListener("message", async (e) => {
+  if (e.data && e.data.type === "vault-sso" && e.data.password) {
+    const input = document.getElementById("passwordInput");
+    if (input && !token) { input.value = e.data.password; await doLogin(); }
+  }
+});
 let token = localStorage.getItem("bookmark_token") || "";
 let allBookmarks = [];
 let allFolders = [];
